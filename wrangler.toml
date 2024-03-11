@@ -1,0 +1,10 @@
+name = "cf-remix-template"
+main = "./public"
+compatibility_date = "2024-01-27"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "db"
+database_id = "<INSERT_DB_ID>"
+preview_database_id = "<INSERT_PREVIEW_DB_ID>"
+

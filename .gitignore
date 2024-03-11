@@ -1,0 +1,12 @@
+node_modules
+
+/.cache
+/.wrangler
+/build
+/functions
+/public/build
+/tmp
+
+.env
+.dev.vars
+.DS_Store

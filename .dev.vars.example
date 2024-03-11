@@ -1,0 +1,2 @@
+POSTMARK_API_TOKEN=<INSERT_API_TOKEN>
+POSTMARK_DEFAULT_FROM=no-reply@cf-remix-template.com
