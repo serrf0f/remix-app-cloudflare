@@ -1,0 +1,13 @@
+{
+  "version": "5",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1710708713805,
+      "tag": "0000_cloudy_warlock",
+      "breakpoints": true
+    }
+  ]
+}
