@@ -13,7 +13,6 @@ import { type ChangeEventHandler, useCallback, useEffect, useRef } from "react";
 import { Button } from "~/@shadcn/ui/button";
 import { Input } from "~/@shadcn/ui/input";
 import { SignUpVerificationCodeEmail } from "~/lib/auth.email.verification-code.server";
-import { auth, db, emailClient } from "~/lib/init.server";
 import {
   emailVerificationCodeTable,
   userTable,
@@ -21,9 +20,6 @@ import {
 import {
   DEFAULT_EMAIL_VERIFICATION_CODE_SIZE,
   DEFAULT_REDIRECT_URL,
-  generateEmailVerificationCode,
-  getSession,
-  validateRequest,
 } from "../lib/auth.lucia.server";
 
 const MAX_RETRY = 2;
@@ -38,8 +34,11 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { user } = await getSession(request);
+export const loader = async ({
+  request,
+  context: { auth },
+}: LoaderFunctionArgs) => {
+  const { user } = await auth.getSession(request);
   if (user?.emailVerified) {
     return redirect(DEFAULT_REDIRECT_URL, { status: 307 });
   }
@@ -47,7 +46,10 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 type ActionResult = { errors: { message?: string; resendCode?: boolean } };
-export async function action({ request }: ActionFunctionArgs) {
+export async function action({
+  request,
+  context: { auth, db, email: emailClient },
+}: ActionFunctionArgs) {
   const errors: ActionResult["errors"] = {};
   const formData = await request.formData();
   const code = [
@@ -58,7 +60,7 @@ export async function action({ request }: ActionFunctionArgs) {
   ].join("");
   const resendAction = formData.get("resend");
 
-  const user = await validateRequest(request);
+  const user = await auth.validateRequest(request);
 
   if (user.emailVerified) {
     return new Response(null, {
@@ -81,7 +83,10 @@ export async function action({ request }: ActionFunctionArgs) {
   };
 
   if (resendAction) {
-    const newCode = await generateEmailVerificationCode(user.id, user.email);
+    const newCode = await auth.generateEmailVerificationCode(
+      user.id,
+      user.email,
+    );
     await emailClient.sendEmail({
       to: user.email,
       subject: "Verification code",
@@ -164,13 +169,12 @@ export async function action({ request }: ActionFunctionArgs) {
     return json({ errors });
   }
 
-  const session = await auth.createSession(user.id, {});
-  const sessionCookie = auth.createSessionCookie(session.id);
+  const { cookie } = await auth.createSession(user.id, {});
   return new Response(null, {
     status: 302,
     headers: {
       Location: DEFAULT_REDIRECT_URL,
-      "Set-Cookie": sessionCookie.serialize(),
+      "Set-Cookie": cookie.serialize(),
     },
   });
 }

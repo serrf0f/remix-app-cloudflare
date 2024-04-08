@@ -12,9 +12,8 @@ import { Loader2 } from "lucide-react";
 import { Button } from "~/@shadcn/ui/button";
 import { Input } from "~/@shadcn/ui/input";
 import { Label } from "~/@shadcn/ui/label";
-import { auth, db } from "~/lib/init.server";
 import { resetPasswordTable, userTable } from "../lib/auth.drizzle.server";
-import { DEFAULT_REDIRECT_URL, getSession } from "../lib/auth.lucia.server";
+import { DEFAULT_REDIRECT_URL } from "../lib/auth.lucia.server";
 
 export const meta: MetaFunction = () => {
   return [
@@ -23,8 +22,11 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { user } = await getSession(request);
+export const loader = async ({
+  request,
+  context: { auth },
+}: LoaderFunctionArgs) => {
+  const { user } = await auth.getSession(request);
   if (user) {
     return redirect(DEFAULT_REDIRECT_URL, { status: 307 });
   }
@@ -36,6 +38,7 @@ type ActionResult = {
 };
 export async function action({
   request,
+  context: { auth, db },
   params: { token },
 }: ActionFunctionArgs) {
   const formData = await request.formData();
@@ -81,8 +84,10 @@ export async function action({
       .delete(resetPasswordTable)
       .where(eq(resetPasswordTable.id, verificationToken.id)),
   ]);
-  const session = await auth.createSession(verificationToken.userId, {});
-  const sessionCookie = auth.createSessionCookie(session.id);
+  const { session, cookie: sessionCookie } = await auth.createSession(
+    verificationToken.userId,
+    {},
+  );
   return new Response(null, {
     status: 302,
     headers: {

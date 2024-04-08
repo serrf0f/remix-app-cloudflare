@@ -12,13 +12,8 @@ import { Button } from "~/@shadcn/ui/button";
 import { Input } from "~/@shadcn/ui/input";
 import { Label } from "~/@shadcn/ui/label";
 import { ResetPasswordLinkEmail } from "~/lib/auth.email.reset-password.server";
-import { db, emailClient } from "~/lib/init.server";
 import { resetPasswordTable, userTable } from "../lib/auth.drizzle.server";
-import {
-  DEFAULT_REDIRECT_URL,
-  createPasswordResetToken,
-  getSession,
-} from "../lib/auth.lucia.server";
+import { DEFAULT_REDIRECT_URL } from "../lib/auth.lucia.server";
 
 export const meta: MetaFunction = () => {
   return [
@@ -27,8 +22,11 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { user } = await getSession(request);
+export const loader = async ({
+  request,
+  context: { auth },
+}: LoaderFunctionArgs) => {
+  const { user } = await auth.getSession(request);
   if (user) {
     return redirect(DEFAULT_REDIRECT_URL, { status: 307 });
   }
@@ -39,7 +37,10 @@ type ActionResult = {
   errors: { email?: string };
   message?: string;
 };
-export async function action({ request }: ActionFunctionArgs) {
+export async function action({
+  request,
+  context: { auth, db, email: emailClient },
+}: ActionFunctionArgs) {
   const formData = await request.formData();
   const email = String(formData.get("email"));
   const errors: ActionResult["errors"] = {};
@@ -54,7 +55,7 @@ export async function action({ request }: ActionFunctionArgs) {
     return json({ errors });
   }
 
-  const verificationToken = await createPasswordResetToken(user.id);
+  const verificationToken = await auth.createPasswordResetToken(user.id);
   const url = new URL(request.url);
   const schemaAndDomain = `${url.protocol}//${url.hostname}${
     url.port ? `:${url.port}` : ""

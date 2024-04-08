@@ -13,16 +13,10 @@ import { Button } from "~/@shadcn/ui/button";
 import { Input } from "~/@shadcn/ui/input";
 import { Label } from "~/@shadcn/ui/label";
 import { SignUpVerificationCodeEmail } from "~/lib/auth.email.verification-code.server";
-import { auth, db, emailClient } from "~/lib/init.server";
 import {
   emailVerificationCodeTable,
   userTable,
 } from "../lib/auth.drizzle.server";
-import {
-  generateEmailVerificationCode,
-  getSession,
-  setSessionCookie,
-} from "../lib/auth.lucia.server";
 
 const REDIRECT_URL = "/verify-email-address";
 
@@ -33,20 +27,26 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { user, session } = await getSession(request);
+export const loader = async ({
+  request,
+  context: { auth },
+}: LoaderFunctionArgs) => {
+  const { user, session } = await auth.getSession(request);
   if (user) {
     return redirect(REDIRECT_URL, { status: 307 });
   }
   const res = new Response(undefined, { status: 200 });
-  setSessionCookie(res, session);
+  auth.setSessionCookie(res, session);
   return null;
 };
 
 type ActionResult = {
   errors: { email?: string; password?: string; message?: string };
 };
-export async function action({ request }: ActionFunctionArgs) {
+export async function action({
+  request,
+  context: { auth, db, email: emailClient },
+}: ActionFunctionArgs) {
   const formData = await request.formData();
   const email = String(formData.get("email"));
   const password = String(formData.get("password"));
@@ -71,7 +71,7 @@ export async function action({ request }: ActionFunctionArgs) {
     .insert(userTable)
     .values({ id: userId, hashedPassword, email, createdAt: new Date() });
   // send verification code
-  const code = await generateEmailVerificationCode(userId, email);
+  const code = await auth.generateEmailVerificationCode(userId, email);
   const url = new URL(request.url);
   const schemaAndDomain = `${url.protocol}//${url.hostname}${
     url.port ? `:${url.port}` : ""
@@ -105,13 +105,12 @@ export async function action({ request }: ActionFunctionArgs) {
     return json({ errors });
   }
 
-  const session = await auth.createSession(userId, {});
-  const sessionCookie = auth.createSessionCookie(session.id);
+  const { cookie } = await auth.createSession(userId, {});
   return new Response(null, {
     status: 302,
     headers: {
       Location: REDIRECT_URL,
-      "Set-Cookie": sessionCookie.serialize(),
+      "Set-Cookie": cookie.serialize(),
     },
   });
 }

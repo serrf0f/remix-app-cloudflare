@@ -4,17 +4,19 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
-    "build": "remix build",
+    "build": "remix vite:build",
     "clean": "rm -Rf node_modules/ build/ .cache/",
     "db:generate": "drizzle-kit generate:sqlite",
     "db:dev": "wrangler d1 execute DB --local",
     "db:preview": "wrangler d1 execute DB --preview",
     "db:production": "wrangler d1 execute DB",
-    "dev": "remix dev --manual -c \"bun run start\"",
-    "format": "bun biome format --write ./app",
+    "deploy": "wrangler pages deploy ./build/client",
+    "dev": "remix vite:dev --force",
+    "format": "bun biome format --write ./app ./*.ts",
     "lint": "bun biome check --apply ./app",
-    "start": "wrangler pages dev --compatibility-date=2024-04-04 ./public",
-    "typecheck": "tsc"
+    "start": "wrangler pages dev ./build/client",
+    "typecheck": "tsc",
+    "typegen": "wrangler types"
   },
   "dependencies": {
     "@lucia-auth/adapter-drizzle": "1.0.0",
@@ -31,11 +33,11 @@
     "@radix-ui/react-separator": "^1.0.3",
     "@radix-ui/react-slot": "^1.0.2",
     "@radix-ui/react-switch": "^1.0.3",
+    "@radix-ui/react-tooltip": "^1.0.7",
     "@react-email/components": "0.0.16",
     "@react-email/render": "^0.0.12",
     "@remix-run/cloudflare": "^2.8.1",
     "@remix-run/cloudflare-pages": "^2.8.1",
-    "@remix-run/css-bundle": "^2.8.1",
     "@remix-run/react": "^2.8.1",
     "@remix-run/serve": "^2.8.1",
     "class-variance-authority": "^0.7.0",
@@ -43,32 +45,37 @@
     "cmdk": "^1.0.0",
     "date-fns": "^3.6.0",
     "drizzle-orm": "^0.30.7",
-    "framer-motion": "^11.0.25",
     "isbot": "^5.1.4",
     "lucia": "3.0.1",
     "lucide-react": "^0.365.0",
-    "react": "^18.2.0",
+    "react": "18.3.0-canary-14898b6a9-20240318",
     "react-day-picker": "^8.10.0",
-    "react-dom": "^18.2.0",
+    "react-dom": "18.3.0-canary-14898b6a9-20240318",
     "recharts": "^2.12.4",
     "tailwind-merge": "^2.2.2",
     "tailwindcss-animate": "^1.0.7",
-    "vaul": "^0.9.0",
-    "zod": "^3.22.4"
+    "vaul": "^0.9.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.6.4",
-    "@cloudflare/ai": "^1.1.0",
     "@cloudflare/workers-types": "^4.20240405.0",
     "@remix-run/dev": "^2.8.1",
-    "@tauri-apps/cli": "^1.5.11",
-    "@types/bun": "^1.0.12",
     "@types/react": "^18.2.74",
     "@types/react-dom": "^18.2.21",
     "autoprefixer": "latest",
     "drizzle-kit": "^0.20.14",
+    "node-fetch": "^3.3.2",
     "tailwindcss": "latest",
     "typescript": "^5.4.4",
+    "vite": "^5.2.8",
+    "vite-tsconfig-paths": "^4.2.1",
     "wrangler": "3.48.0"
+  },
+  "overrides": {
+    "react": "18.3.0-canary-14898b6a9-20240318",
+    "react-dom": "18.3.0-canary-14898b6a9-20240318"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

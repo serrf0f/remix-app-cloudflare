@@ -1,10 +1,11 @@
 name = "remix-app-cloudflare"
-main = "./public"
-compatibility_date = "2024-01-27"
+compatibility_date = "2024-04-08"
+
+[vars]
+POSTMARK_API_TOKEN = "string"
+POSTMARK_DEFAULT_FROM = "string"
 
 [[d1_databases]]
+database_id = "<db id>"
 binding = "DB"
-database_name = "db"
-database_id = "<INSERT_DB_ID>"
-preview_database_id = "<INSERT_PREVIEW_DB_ID>"
-
+database_name = "DB"

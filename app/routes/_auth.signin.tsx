@@ -12,14 +12,8 @@ import { Loader2 } from "lucide-react";
 import { Button } from "~/@shadcn/ui/button";
 import { Input } from "~/@shadcn/ui/input";
 import { Label } from "~/@shadcn/ui/label";
-import { auth, db } from "~/lib/init.server";
 import { userTable } from "../lib/auth.drizzle.server";
-import {
-  DEFAULT_REDIRECT_URL,
-  getSession,
-  setSessionCookie,
-  userPrefs,
-} from "../lib/auth.lucia.server";
+import { DEFAULT_REDIRECT_URL, userPrefs } from "../lib/auth.lucia.server";
 
 export const meta: MetaFunction = () => {
   return [
@@ -28,20 +22,26 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { user, session } = await getSession(request);
+export const loader = async ({
+  request,
+  context: { auth },
+}: LoaderFunctionArgs) => {
+  const { user, session } = await auth.getSession(request);
   if (user) {
     return redirect(DEFAULT_REDIRECT_URL, { status: 307 });
   }
   const res = new Response(undefined, { status: 200 });
-  setSessionCookie(res, session);
+  auth.setSessionCookie(res, session);
   return null;
 };
 
 type ActionResult = {
   errors: { message?: string; email?: string; password?: string };
 };
-export async function action({ request }: ActionFunctionArgs) {
+export async function action({
+  request,
+  context: { auth, db },
+}: ActionFunctionArgs) {
   const formData = await request.formData();
   const email = String(formData.get("email"));
   const password = String(formData.get("password"));
@@ -77,8 +77,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
   const cookieHeader = request.headers.get("Cookie");
   const cookie = (await userPrefs.parse(cookieHeader)) || {};
-  const session = await auth.createSession(user.id, {});
-  const sessionCookie = auth.createSessionCookie(session.id);
+  const { cookie: sessionCookie } = await auth.createSession(user.id, {});
   const headers = new Headers();
   const redirectUrl = cookie.redirectUrl || DEFAULT_REDIRECT_URL;
 

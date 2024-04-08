@@ -1,10 +1,8 @@
-import type { Config } from 'tailwindcss'
-import { fontFamily } from "tailwindcss/defaultTheme"
+import type { Config } from "tailwindcss";
+import { fontFamily } from "tailwindcss/defaultTheme";
 
 module.exports = {
-  content: [
-    './app/**/*.{ts,tsx}',
-  ],
+  content: ["./app/**/*.{ts,tsx}"],
   prefix: "",
   theme: {
     container: {
@@ -16,7 +14,7 @@ module.exports = {
     },
     extend: {
       fontFamily: {
-        sans: ['Afacad', ...fontFamily.sans],
+        sans: ["Afacad", ...fontFamily.sans],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -75,4 +73,4 @@ module.exports = {
     },
   },
   plugins: [require("tailwindcss-animate")],
-} satisfies Config
+} satisfies Config;
