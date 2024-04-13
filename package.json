@@ -69,7 +69,7 @@
     "typescript": "^5.4.4",
     "vite": "^5.2.8",
     "vite-tsconfig-paths": "^4.2.1",
-    "wrangler": "3.49.0"
+    "wrangler": "3.50.0"
   },
   "overrides": {
     "react": "18.3.0-canary-14898b6a9-20240318",
