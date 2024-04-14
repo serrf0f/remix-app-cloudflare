@@ -1,3 +1,4 @@
+import { Button, Container, Spinner, Text, TextField } from "@radix-ui/themes";
 import {
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
@@ -8,10 +9,7 @@ import {
 import { Form, Link, useActionData, useNavigation } from "@remix-run/react";
 import { and, eq } from "drizzle-orm";
 import { Scrypt } from "lucia";
-import { Loader2 } from "lucide-react";
-import { Button } from "~/@shadcn/ui/button";
-import { Input } from "~/@shadcn/ui/input";
-import { Label } from "~/@shadcn/ui/label";
+import { Loader2, Mail } from "lucide-react";
 import { SignUpVerificationCodeEmail } from "~/lib/auth.email.verification-code.server";
 import {
   emailVerificationCodeTable,
@@ -120,7 +118,7 @@ export default function Signup() {
   const { state } = useNavigation();
   const loading = state === "submitting" || state === "loading";
   return (
-    <div className="lg:p-8 flex items-center h-screen">
+    <Container>
       <Link to="/signin">
         <Button variant="outline" className="absolute top-4 right-4">
           Sign In
@@ -140,10 +138,10 @@ export default function Signup() {
           <Form method="POST">
             <div className="grid gap-2">
               <div className="grid gap-1">
-                <Label className="sr-only" htmlFor="email">
+                <Text className="sr-only" htmlFor="email">
                   Email
-                </Label>
-                <Input
+                </Text>
+                <TextField.Root
                   id="email"
                   name="email"
                   placeholder="name@example.com"
@@ -160,10 +158,10 @@ export default function Signup() {
                 ) : null}
               </div>
               <div className="grid gap-1">
-                <Label className="sr-only" htmlFor="password">
+                <Text className="sr-only" htmlFor="password">
                   Password
-                </Label>
-                <Input
+                </Text>
+                <TextField.Root
                   id="password"
                   name="password"
                   placeholder="password"
@@ -182,18 +180,17 @@ export default function Signup() {
                   {actionData?.errors.message}
                 </em>
               ) : null}
-              <Button
-                disabled={loading}
-                className="space-x-2 items-center flex"
-              >
-                {loading && <Loader2 size={14} className="animate-spin" />}
+              <Button disabled={loading} variant="classic">
+                <Spinner loading={loading}>
+                  <Mail size={14} />
+                </Spinner>
                 <span>Sign Up with Email</span>
               </Button>
             </div>
           </Form>
         </div>
       </div>
-    </div>
+    </Container>
   );
 }
 

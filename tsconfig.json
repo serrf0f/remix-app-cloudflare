@@ -5,8 +5,9 @@
     "**/.server/**/*.ts",
     "**/.server/**/*.tsx",
     "**/.client/**/*.ts",
-    "**/.client/**/*.tsx"
-, "lucia.d.ts"  ],
+    "**/.client/**/*.tsx",
+    "lucia.d.ts"
+  ],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "types": ["@remix-run/cloudflare", "vite/client"],
@@ -23,8 +24,7 @@
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
-      "~/*": ["./app/*"],
-      "@shadcn/*": ["app/@shadcn/*"]
+      "~/*": ["./app/*"]
     },
 
     // Vite takes care of building everything, not tsc.

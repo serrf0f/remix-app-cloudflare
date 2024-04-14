@@ -1,3 +1,4 @@
+import { Button, Spinner, Text, TextField } from "@radix-ui/themes";
 import {
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
@@ -8,10 +9,7 @@ import {
 import { Form, Link, useActionData, useNavigation } from "@remix-run/react";
 import { eq } from "drizzle-orm";
 import { Scrypt } from "lucia";
-import { Loader2 } from "lucide-react";
-import { Button } from "~/@shadcn/ui/button";
-import { Input } from "~/@shadcn/ui/input";
-import { Label } from "~/@shadcn/ui/label";
+import { Loader2, Mail } from "lucide-react";
 import { userTable } from "../lib/auth.drizzle.server";
 import { DEFAULT_REDIRECT_URL, userPrefs } from "../lib/auth.lucia.server";
 
@@ -117,10 +115,10 @@ export default function Signin() {
           <Form method="POST">
             <div className="grid gap-2">
               <div className="grid gap-1">
-                <Label className="sr-only" htmlFor="email">
+                <Text className="sr-only" htmlFor="email">
                   Email
-                </Label>
-                <Input
+                </Text>
+                <TextField.Root
                   id="email"
                   name="email"
                   placeholder="name@example.com"
@@ -137,10 +135,10 @@ export default function Signin() {
                 ) : null}
               </div>
               <div className="grid gap-1">
-                <Label className="sr-only" htmlFor="password">
+                <Text className="sr-only" htmlFor="password">
                   Password
-                </Label>
-                <Input
+                </Text>
+                <TextField.Root
                   id="password"
                   name="password"
                   placeholder="password"
@@ -161,7 +159,7 @@ export default function Signin() {
               ) : null}
               <div className="flex justify-end -mt-2">
                 <Link to="/forgot-password">
-                  <Button variant="link" size="sm" type="button">
+                  <Button variant="ghost" size="1" type="button">
                     Forgot password?
                   </Button>
                 </Link>
@@ -170,7 +168,9 @@ export default function Signin() {
                 disabled={loading}
                 className="space-x-2 items-center flex"
               >
-                {loading && <Loader2 size={14} className="animate-spin" />}
+                <Spinner loading={loading}>
+                  <Mail />
+                </Spinner>
                 <span>Sign In with Email</span>
               </Button>
             </div>

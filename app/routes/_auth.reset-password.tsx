@@ -1,3 +1,4 @@
+import { Button, Text, TextField } from "@radix-ui/themes";
 import {
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
@@ -9,9 +10,6 @@ import { Form, Link, useActionData, useNavigation } from "@remix-run/react";
 import { eq } from "drizzle-orm";
 import { Scrypt } from "lucia";
 import { Loader2 } from "lucide-react";
-import { Button } from "~/@shadcn/ui/button";
-import { Input } from "~/@shadcn/ui/input";
-import { Label } from "~/@shadcn/ui/label";
 import { resetPasswordTable, userTable } from "../lib/auth.drizzle.server";
 import { DEFAULT_REDIRECT_URL } from "../lib/auth.lucia.server";
 
@@ -117,10 +115,10 @@ export default function ResetPassword() {
           <Form method="POST">
             <div className="grid gap-2">
               <div className="grid gap-1">
-                <Label className="sr-only" htmlFor="password">
+                <Text className="sr-only" htmlFor="password">
                   Password
-                </Label>
-                <Input
+                </Text>
+                <TextField.Root
                   id="password"
                   name="password"
                   placeholder="new password"
@@ -130,10 +128,10 @@ export default function ResetPassword() {
                 />
               </div>
               <div className="grid gap-1">
-                <Label className="sr-only" htmlFor="password-confirm">
+                <Text className="sr-only" htmlFor="password-confirm">
                   Confirm password
-                </Label>
-                <Input
+                </Text>
+                <TextField.Root
                   id="password-confirm"
                   name="password-confirm"
                   placeholder="new password confirmation"
@@ -156,7 +154,9 @@ export default function ResetPassword() {
               </Button>
               {actionData?.errors?.expired ? (
                 <Link to="/forgot-password">
-                  <Button variant="link">Go back to password reset page</Button>
+                  <Button variant="ghost">
+                    Go back to password reset page
+                  </Button>
                 </Link>
               ) : null}
             </div>

@@ -1,4 +1,5 @@
 import { Label } from "@radix-ui/react-label";
+import { Button, Spinner, Text, TextField } from "@radix-ui/themes";
 import {
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
@@ -8,10 +9,8 @@ import {
 } from "@remix-run/cloudflare";
 import { Form, useActionData, useNavigation } from "@remix-run/react";
 import { and, eq } from "drizzle-orm";
-import { Loader2 } from "lucide-react";
+import { Loader2, Lock } from "lucide-react";
 import { type ChangeEventHandler, useCallback, useEffect, useRef } from "react";
-import { Button } from "~/@shadcn/ui/button";
-import { Input } from "~/@shadcn/ui/input";
 import { SignUpVerificationCodeEmail } from "~/lib/auth.email.verification-code.server";
 import {
   emailVerificationCodeTable,
@@ -246,10 +245,10 @@ export default function VerifyCode() {
           <Form method="POST">
             <div className="grid gap-2">
               <div className="flex justify-center space-x-3">
-                <Label className="sr-only" htmlFor="code-1">
+                <Text className="sr-only" htmlFor="code-1">
                   First digit
-                </Label>
-                <Input
+                </Text>
+                <TextField.Root
                   ref={refInput1}
                   onChange={onDigitEnter}
                   className="text-center w-12"
@@ -261,10 +260,10 @@ export default function VerifyCode() {
                   autoCorrect="off"
                   disabled={state === "submitting"}
                 />
-                <Label className="sr-only" htmlFor="code-2">
+                <Text className="sr-only" htmlFor="code-2">
                   Second digit
-                </Label>
-                <Input
+                </Text>
+                <TextField.Root
                   ref={refInput2}
                   onChange={onDigitEnter}
                   className="text-center w-12"
@@ -276,10 +275,10 @@ export default function VerifyCode() {
                   autoCorrect="off"
                   disabled={state === "submitting"}
                 />
-                <Label className="sr-only" htmlFor="code-3">
+                <Text className="sr-only" htmlFor="code-3">
                   Third digit
-                </Label>
-                <Input
+                </Text>
+                <TextField.Root
                   ref={refInput3}
                   onChange={onDigitEnter}
                   className="text-center w-12"
@@ -291,10 +290,10 @@ export default function VerifyCode() {
                   autoCorrect="off"
                   disabled={state === "submitting"}
                 />
-                <Label className="sr-only" htmlFor="code-4">
+                <Text className="sr-only" htmlFor="code-4">
                   Third digit
-                </Label>
-                <Input
+                </Text>
+                <TextField.Root
                   ref={refInput4}
                   onChange={onDigitEnter}
                   className="text-center w-12"
@@ -317,15 +316,15 @@ export default function VerifyCode() {
                 disabled={state === "submitting"}
                 className="mt-4 space-x-2 items-center flex"
               >
-                {state === "submitting" && (
-                  <Loader2 size={14} className="animate-spin" />
-                )}
+                <Spinner loading={state === "submitting"}>
+                  <Lock />
+                </Spinner>
                 <span>Verify</span>
               </Button>
               {actionData?.errors?.resendCode ? (
                 <Form className="text-xs" method="POST">
-                  <Input type="hidden" name="resend" value="1" />
-                  <Button type="submit" variant="link">
+                  <TextField.Root type="hidden" name="resend" value="1" />
+                  <Button type="submit" variant="ghost">
                     Get a new code
                   </Button>
                 </Form>

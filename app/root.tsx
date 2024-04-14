@@ -1,3 +1,5 @@
+import { Theme, ThemePanel } from "@radix-ui/themes";
+import "@radix-ui/themes/styles.css";
 import type { LinksFunction } from "@remix-run/cloudflare";
 import {
   Links,
@@ -30,7 +32,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
         />
       </head>
       <body>
-        {children}
+        <Theme>
+          {children}
+          <ThemePanel />
+        </Theme>
         <ScrollRestoration />
         <Scripts />
       </body>

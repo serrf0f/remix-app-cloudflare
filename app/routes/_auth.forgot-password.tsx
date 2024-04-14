@@ -1,3 +1,4 @@
+import { Button, Spinner, Text, TextField } from "@radix-ui/themes";
 import {
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
@@ -7,10 +8,7 @@ import {
 } from "@remix-run/cloudflare";
 import { Form, Link, useActionData, useNavigation } from "@remix-run/react";
 import { eq } from "drizzle-orm";
-import { ArrowLeft, Loader2 } from "lucide-react";
-import { Button } from "~/@shadcn/ui/button";
-import { Input } from "~/@shadcn/ui/input";
-import { Label } from "~/@shadcn/ui/label";
+import { ArrowLeftIcon, Mail } from "lucide-react";
 import { ResetPasswordLinkEmail } from "~/lib/auth.email.reset-password.server";
 import { resetPasswordTable, userTable } from "../lib/auth.drizzle.server";
 import { DEFAULT_REDIRECT_URL } from "../lib/auth.lucia.server";
@@ -87,10 +85,10 @@ export default function ForgotPassword() {
     <div className="lg:p-8 flex items-center h-screen">
       <Link to="/signin">
         <Button
-          variant="outline"
+          variant="classic"
           className="absolute flex space-x-2 top-4 right-4"
         >
-          <ArrowLeft />
+          <ArrowLeftIcon />
           <span>Back to Sign In</span>
         </Button>
       </Link>
@@ -109,10 +107,8 @@ export default function ForgotPassword() {
           <Form method="POST">
             <div className="grid gap-2">
               <div className="grid gap-1">
-                <Label className="sr-only" htmlFor="email">
-                  Email
-                </Label>
-                <Input
+                <Text htmlFor="email">Email</Text>
+                <TextField.Root
                   id="email"
                   name="email"
                   placeholder="name@example.com"
@@ -132,7 +128,9 @@ export default function ForgotPassword() {
                 disabled={loading}
                 className="space-x-2 items-center flex"
               >
-                {loading && <Loader2 size={14} className="animate-spin" />}
+                <Spinner loading={loading}>
+                  <Mail />
+                </Spinner>
                 <span>Send Link</span>
               </Button>
               {actionData?.message ? (
