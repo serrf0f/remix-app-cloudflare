@@ -1,6 +1,8 @@
+import { DrizzleSQLiteAdapter } from "@lucia-auth/adapter-drizzle";
 import { createCookie, redirect } from "@remix-run/cloudflare";
 import { eq } from "drizzle-orm";
-import { type Session, TimeSpan, verifyRequestOrigin, Lucia } from "lucia";
+import type { DrizzleD1Database } from "drizzle-orm/d1";
+import { Lucia, type Session, TimeSpan, verifyRequestOrigin } from "lucia";
 import {
   emailVerificationCodeTable,
   resetPasswordTable,
@@ -8,8 +10,6 @@ import {
   userTable,
 } from "./auth.drizzle.server";
 import type { UserAuthenticated } from "./auth.types";
-import { DrizzleD1Database } from "drizzle-orm/d1";
-import { DrizzleSQLiteAdapter } from "@lucia-auth/adapter-drizzle";
 
 export const DEFAULT_EMAIL_VERIFICATION_CODE_SIZE = 4;
 export const DEFAULT_EMAIL_VERIFICATION_CODE_DURATION_MINUTES = 5;

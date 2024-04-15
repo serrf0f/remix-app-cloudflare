@@ -1,3 +1,4 @@
+import { Turnstile } from "@marsidev/react-turnstile";
 import {
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
@@ -5,13 +6,22 @@ import {
   json,
   redirect,
 } from "@remix-run/cloudflare";
-import { Form, Link, useActionData, useNavigation } from "@remix-run/react";
+import {
+  Form,
+  Link,
+  useActionData,
+  useLoaderData,
+  useNavigation,
+} from "@remix-run/react";
 import { eq } from "drizzle-orm";
 import { ArrowLeft, Loader2 } from "lucide-react";
+import { useState } from "react";
 import { Button } from "~/@shadcn/ui/button";
 import { Input } from "~/@shadcn/ui/input";
 import { Label } from "~/@shadcn/ui/label";
 import { ResetPasswordLinkEmail } from "~/lib/auth.email.reset-password.server";
+import { verifyTurnstile } from "~/lib/auth.turnstile.server";
+import { useTurnstileRefreshKey } from "~/lib/useTurnstileRefreshKey";
 import { resetPasswordTable, userTable } from "../lib/auth.drizzle.server";
 import { DEFAULT_REDIRECT_URL } from "../lib/auth.lucia.server";
 
@@ -24,23 +34,23 @@ export const meta: MetaFunction = () => {
 
 export const loader = async ({
   request,
-  context: { auth },
+  context: { auth, cloudflare },
 }: LoaderFunctionArgs) => {
   const { user } = await auth.getSession(request);
   if (user) {
     return redirect(DEFAULT_REDIRECT_URL, { status: 307 });
   }
-  return null;
+  return {
+    cloudflareTurnstileSitekey: cloudflare.env.CLOUDFLARE_TURNSTILE_SITEKEY,
+  };
 };
 
 type ActionResult = {
   errors: { email?: string };
   message?: string;
 };
-export async function action({
-  request,
-  context: { auth, db, email: emailClient },
-}: ActionFunctionArgs) {
+export async function action({ request, context }: ActionFunctionArgs) {
+  const { auth, db, email: emailClient } = context;
   const formData = await request.formData();
   const email = String(formData.get("email"));
   const errors: ActionResult["errors"] = {};
@@ -53,6 +63,10 @@ export async function action({
   if (!user || !user.emailVerified) {
     errors.email = "Invalid email";
     return json({ errors });
+  }
+
+  if (!(await verifyTurnstile({ request, formData, context }))) {
+    return json({ errors: { email: "Smart captcha challenge failed" } });
   }
 
   const verificationToken = await auth.createPasswordResetToken(user.id);
@@ -83,6 +97,9 @@ export default function ForgotPassword() {
   const actionData = useActionData<ActionResult>();
   const { state } = useNavigation();
   const loading = state === "submitting" || state === "loading";
+  const { cloudflareTurnstileSitekey } = useLoaderData<typeof loader>();
+  const [token, setToken] = useState<string | null>(null);
+  const turnstileRefreshKey = useTurnstileRefreshKey(actionData);
   return (
     <div className="lg:p-8 flex items-center h-screen">
       <Link to="/signin">
@@ -128,8 +145,14 @@ export default function ForgotPassword() {
                   </em>
                 ) : null}
               </div>
+              <Turnstile
+                key={turnstileRefreshKey}
+                className="mx-auto"
+                siteKey={cloudflareTurnstileSitekey}
+                onSuccess={setToken}
+              />
               <Button
-                disabled={loading}
+                disabled={loading || !token}
                 className="space-x-2 items-center flex"
               >
                 {loading && <Loader2 size={14} className="animate-spin" />}

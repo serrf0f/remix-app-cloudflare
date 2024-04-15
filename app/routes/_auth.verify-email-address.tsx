@@ -1,3 +1,4 @@
+import { Turnstile } from "@marsidev/react-turnstile";
 import { Label } from "@radix-ui/react-label";
 import {
   type ActionFunctionArgs,
@@ -6,13 +7,26 @@ import {
   json,
   redirect,
 } from "@remix-run/cloudflare";
-import { Form, useActionData, useNavigation } from "@remix-run/react";
+import {
+  Form,
+  useActionData,
+  useLoaderData,
+  useNavigation,
+} from "@remix-run/react";
 import { and, eq } from "drizzle-orm";
 import { Loader2 } from "lucide-react";
-import { type ChangeEventHandler, useCallback, useEffect, useRef } from "react";
+import {
+  type ChangeEventHandler,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { Button } from "~/@shadcn/ui/button";
 import { Input } from "~/@shadcn/ui/input";
 import { SignUpVerificationCodeEmail } from "~/lib/auth.email.verification-code.server";
+import { verifyTurnstile } from "~/lib/auth.turnstile.server";
+import { useTurnstileRefreshKey } from "~/lib/useTurnstileRefreshKey";
 import {
   emailVerificationCodeTable,
   userTable,
@@ -36,20 +50,20 @@ export const meta: MetaFunction = () => {
 
 export const loader = async ({
   request,
-  context: { auth },
+  context: { auth, cloudflare },
 }: LoaderFunctionArgs) => {
   const { user } = await auth.getSession(request);
   if (user?.emailVerified) {
     return redirect(DEFAULT_REDIRECT_URL, { status: 307 });
   }
-  return null;
+  return {
+    cloudflareTurnstileSitekey: cloudflare.env.CLOUDFLARE_TURNSTILE_SITEKEY,
+  };
 };
 
 type ActionResult = { errors: { message?: string; resendCode?: boolean } };
-export async function action({
-  request,
-  context: { auth, db, email: emailClient },
-}: ActionFunctionArgs) {
+export async function action({ request, context }: ActionFunctionArgs) {
+  const { auth, db, email: emailClient } = context;
   const errors: ActionResult["errors"] = {};
   const formData = await request.formData();
   const code = [
@@ -59,6 +73,10 @@ export async function action({
     Number(formData.get("code-4")),
   ].join("");
   const resendAction = formData.get("resend");
+
+  if (!(await verifyTurnstile({ request, formData, context }))) {
+    return json({ errors: { email: "Smart captcha challenge failed" } });
+  }
 
   const user = await auth.validateRequest(request);
 
@@ -229,6 +247,9 @@ export default function VerifyCode() {
   useEffect(() => {
     refInput1.current?.focus();
   }, []);
+  const { cloudflareTurnstileSitekey } = useLoaderData<typeof loader>();
+  const [token, setToken] = useState<string | null>(null);
+  const turnstileRefreshKey = useTurnstileRefreshKey(actionData);
 
   return (
     <div className="lg:p-8 flex items-center h-screen">
@@ -312,6 +333,12 @@ export default function VerifyCode() {
                   {actionData?.errors.message}
                 </em>
               ) : null}
+              <Turnstile
+                key={turnstileRefreshKey}
+                className="mx-auto"
+                siteKey={cloudflareTurnstileSitekey}
+                onSuccess={setToken}
+              />
               <Button
                 ref={refButton}
                 disabled={state === "submitting"}

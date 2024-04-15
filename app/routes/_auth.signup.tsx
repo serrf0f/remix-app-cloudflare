@@ -1,3 +1,4 @@
+import { Turnstile } from "@marsidev/react-turnstile";
 import {
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
@@ -5,14 +6,23 @@ import {
   json,
   redirect,
 } from "@remix-run/cloudflare";
-import { Form, Link, useActionData, useNavigation } from "@remix-run/react";
+import {
+  Form,
+  Link,
+  useActionData,
+  useLoaderData,
+  useNavigation,
+} from "@remix-run/react";
 import { and, eq } from "drizzle-orm";
 import { Scrypt } from "lucia";
 import { Loader2 } from "lucide-react";
+import { useState } from "react";
 import { Button } from "~/@shadcn/ui/button";
 import { Input } from "~/@shadcn/ui/input";
 import { Label } from "~/@shadcn/ui/label";
 import { SignUpVerificationCodeEmail } from "~/lib/auth.email.verification-code.server";
+import { verifyTurnstile } from "~/lib/auth.turnstile.server";
+import { useTurnstileRefreshKey } from "~/lib/useTurnstileRefreshKey";
 import {
   emailVerificationCodeTable,
   userTable,
@@ -29,7 +39,7 @@ export const meta: MetaFunction = () => {
 
 export const loader = async ({
   request,
-  context: { auth },
+  context: { auth, cloudflare },
 }: LoaderFunctionArgs) => {
   const { user, session } = await auth.getSession(request);
   if (user) {
@@ -37,16 +47,16 @@ export const loader = async ({
   }
   const res = new Response(undefined, { status: 200 });
   auth.setSessionCookie(res, session);
-  return null;
+  return {
+    cloudflareTurnstileSitekey: cloudflare.env.CLOUDFLARE_TURNSTILE_SITEKEY,
+  };
 };
 
 type ActionResult = {
   errors: { email?: string; password?: string; message?: string };
 };
-export async function action({
-  request,
-  context: { auth, db, email: emailClient },
-}: ActionFunctionArgs) {
+export async function action({ request, context }: ActionFunctionArgs) {
+  const { auth, db, email: emailClient } = context;
   const formData = await request.formData();
   const email = String(formData.get("email"));
   const password = String(formData.get("password"));
@@ -65,11 +75,24 @@ export async function action({
     return json({ errors });
   }
 
+  if (!(await verifyTurnstile({ request, formData, context }))) {
+    return json({ errors: { email: "Smart captcha challenge failed" } });
+  }
+
   const hashedPassword = await new Scrypt().hash(password);
   const userId = crypto.randomUUID();
-  await db
-    .insert(userTable)
-    .values({ id: userId, hashedPassword, email, createdAt: new Date() });
+  try {
+    await db
+      .insert(userTable)
+      .values({ id: userId, hashedPassword, email, createdAt: new Date() });
+  } catch {
+    return json({
+      errors: {
+        email: "User with same email address already exists, please sign-in",
+      },
+    });
+  }
+
   // send verification code
   const code = await auth.generateEmailVerificationCode(userId, email);
   const url = new URL(request.url);
@@ -119,6 +142,9 @@ export default function Signup() {
   const actionData = useActionData<ActionResult>();
   const { state } = useNavigation();
   const loading = state === "submitting" || state === "loading";
+  const { cloudflareTurnstileSitekey } = useLoaderData<typeof loader>();
+  const [token, setToken] = useState<string | null>(null);
+  const turnstileRefreshKey = useTurnstileRefreshKey(actionData);
   return (
     <div className="lg:p-8 flex items-center h-screen">
       <Link to="/signin">
@@ -182,8 +208,14 @@ export default function Signup() {
                   {actionData?.errors.message}
                 </em>
               ) : null}
+              <Turnstile
+                key={turnstileRefreshKey}
+                className="mx-auto"
+                siteKey={cloudflareTurnstileSitekey}
+                onSuccess={setToken}
+              />
               <Button
-                disabled={loading}
+                disabled={loading || !token}
                 className="space-x-2 items-center flex"
               >
                 {loading && <Loader2 size={14} className="animate-spin" />}
