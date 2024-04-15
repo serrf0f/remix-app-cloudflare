@@ -10,6 +10,7 @@
     "db:dev": "wrangler d1 execute DB --local",
     "db:preview": "wrangler d1 execute DB --preview",
     "db:production": "wrangler d1 execute DB",
+    "predeploy": "bun run build",
     "deploy": "wrangler pages deploy ./build/client",
     "dev": "remix vite:dev --force",
     "format": "bun biome format --write ./app ./*.ts",
