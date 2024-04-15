@@ -14,7 +14,7 @@ module.exports = {
     },
     extend: {
       fontFamily: {
-        sans: ["Afacad", ...fontFamily.sans],
+        sans: ["Inter", ...fontFamily.sans],
       },
       colors: {
         border: "hsl(var(--border))",
