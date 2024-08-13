@@ -6,7 +6,7 @@
   "scripts": {
     "build": "remix vite:build",
     "clean": "rm -Rf node_modules/ build/ .cache/",
-    "db:generate": "drizzle-kit generate:sqlite",
+    "db:generate": "drizzle-kit generate",
     "db:dev": "wrangler d1 execute DB --local",
     "db:preview": "wrangler d1 execute DB --preview",
     "db:production": "wrangler d1 execute DB",
@@ -73,7 +73,7 @@
     "typescript": "^5.5.4",
     "vite": "^5.4.0",
     "vite-tsconfig-paths": "^5.0.1",
-    "wrangler": "3.70.0"
+    "wrangler": "3.71.0"
   },
   "engines": {
     "node": ">=18.0.0"

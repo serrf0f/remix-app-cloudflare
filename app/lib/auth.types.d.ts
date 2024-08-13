@@ -1,4 +1,3 @@
-export type UserAuthenticated = Pick<
-  DrizzleUser,
-  "id" | "email" | "emailVerified" | "username" | "avatarUrl"
->;
+import type { DrizzleUser } from "./auth.drizzle.server";
+
+export type UserAuthenticated = Omit<DrizzleUser, "hashedPassword">;

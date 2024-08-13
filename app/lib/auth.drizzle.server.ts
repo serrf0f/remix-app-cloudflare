@@ -13,6 +13,7 @@ export const userTable = sqliteTable("user", {
   username: text("username"),
   avatarUrl: text("avatar_url"),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  banned: integer("banned", { mode: "boolean" }),
 });
 
 export type DrizzleUser = (typeof userTable)["$inferSelect"];

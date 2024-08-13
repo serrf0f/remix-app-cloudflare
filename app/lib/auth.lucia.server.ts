@@ -146,7 +146,17 @@ export class LuciaAuth {
       }
       throw redirect(redirectUrl, { headers });
     }
-    return user as unknown as UserAuthenticated;
+
+    const authenticatedUser = user as unknown as UserAuthenticated;
+
+    if (authenticatedUser.banned) {
+      throw new Response(null, {
+        status: 403,
+        statusText: "User has been banned",
+      });
+    }
+
+    return authenticatedUser;
   }
 
   generateRandomCode(size = DEFAULT_EMAIL_VERIFICATION_CODE_SIZE) {
